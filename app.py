@@ -48,7 +48,7 @@ lsl = st.sidebar.number_input("LSL (lower spec limit)", value=1.220, format="%.4
                               step=0.001, disabled=not use_tol)
 usl = st.sidebar.number_input("USL (upper spec limit)", value=1.280, format="%.4f",
                               step=0.001, disabled=not use_tol)
-tolerance = (usl - lsl) if use_tol else None
+tolerance = round(usl - lsl, 10) if use_tol else None  # avoid 0.06000000000000005
 if use_tol and tolerance is not None and tolerance <= 0:
     st.sidebar.error("USL must be greater than LSL.")
     tolerance = None
@@ -97,7 +97,10 @@ elif source.startswith("Enter"):
                "order each trial so operators can't remember earlier readings.")
     wide = st.data_editor(g.blank_study(n_parts, n_ops, n_trials, names),
                           key=key, hide_index=True, use_container_width=True,
-                          disabled=["Part"])
+                          disabled=["Part"],
+                          column_config={c: st.column_config.NumberColumn(c, format="%.4f")
+                                         for c in g.blank_study(n_parts, n_ops, n_trials, names).columns
+                                         if c != "Part"})
     if wide.drop(columns="Part").isna().any().any():
         st.warning("Fill every cell to run the study.")
         st.stop()
@@ -189,7 +192,8 @@ with tabs[1]:
     a.markdown("**Components of variation**")
     a.altair_chart(
         alt.Chart(melted).mark_bar().encode(
-            x=alt.X("Source:N", sort=None, title=None),
+            x=alt.X("Source:N", sort=None, title=None,
+                      axis=alt.Axis(labelAngle=0, labelLimit=140)),
             xOffset="Measure:N",
             y=alt.Y("Percent:Q", title="%"),
             color=alt.Color("Measure:N", legend=alt.Legend(orient="bottom")),
@@ -201,7 +205,7 @@ with tabs[1]:
     b.markdown("**Measurements by part**")
     b.altair_chart(
         alt.Chart(clean).mark_circle(size=50, opacity=0.7).encode(
-            x=alt.X("Part:N", sort=PART_ORDER),
+            x=alt.X("Part:N", sort=PART_ORDER, axis=alt.Axis(labelAngle=0)),
             y=alt.Y("Measurement:Q", scale=alt.Scale(zero=False), title=units),
             color="Operator:N",
             tooltip=["Part", "Operator", "Trial", "Measurement"],
@@ -220,10 +224,11 @@ with tabs[1]:
         for op in sorted(df["Operator"].unique()):
             line = alt.Chart(df[df["Operator"] == op], title=f"Operator {op}").mark_line(
                 point=True).encode(
-                x=alt.X("Part:N", sort=PART_ORDER),
-                y=alt.Y(f"{value}:Q", scale=y_scale),
+                x=alt.X("Part:N", sort=PART_ORDER, axis=alt.Axis(labelAngle=0)),
+                y=alt.Y(f"{value}:Q", scale=y_scale, title=f"{value} ({units})"),
                 tooltip=["Part", alt.Tooltip(f"{value}:Q", format=".4f")])
-            rule = alt.Chart(lim).mark_rule(strokeDash=[4, 4], color="#d62728").encode(y="y:Q")
+            rule = alt.Chart(lim).mark_rule(strokeDash=[4, 4], color="#d62728").encode(
+                y=alt.Y("y:Q", title=None))
             panels.append((line + rule).properties(width=150, height=180))
         return alt.hconcat(*panels).resolve_scale(y="shared")
 
@@ -246,7 +251,7 @@ with tabs[1]:
     inter = clean.groupby(["Part", "Operator"], as_index=False)["Measurement"].mean()
     st.altair_chart(
         alt.Chart(inter).mark_line(point=True).encode(
-            x=alt.X("Part:N", sort=PART_ORDER),
+            x=alt.X("Part:N", sort=PART_ORDER, axis=alt.Axis(labelAngle=0)),
             y=alt.Y("Measurement:Q", scale=alt.Scale(zero=False), title=f"Average ({units})"),
             color="Operator:N",
         ).properties(height=280),

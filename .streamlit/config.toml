@@ -1,0 +1,6 @@
+[server]
+# Matches the 5 MB check in app.py so the upload box shows the real limit
+maxUploadSize = 5
+
+[theme]
+base = "dark"
