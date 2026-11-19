@@ -415,10 +415,21 @@ def wide_to_long(wide: pd.DataFrame, n_ops: int, n_trials: int,
     return pd.DataFrame(rows)
 
 
+def part_sort_key(s) -> tuple:
+    """Natural order: numeric IDs sort as numbers ('2' before '10'),
+    anything else sorts alphabetically after them."""
+    s = str(s)
+    try:
+        return (0, float(s), s)
+    except ValueError:
+        return (1, 0.0, s)
+
+
 def long_to_wide(d: pd.DataFrame) -> pd.DataFrame:
     w = d.pivot_table(index="Part", columns=["Operator", "Trial"],
                       values="Measurement", aggfunc="first")
     w.columns = [f"{op}-{t}" for op, t in w.columns]
+    w = w.loc[sorted(w.index, key=part_sort_key)]
     return w.reset_index()
 
 

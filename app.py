@@ -8,7 +8,6 @@ reference example); this file only handles input, layout, and charts.
 
 from __future__ import annotations
 
-import io
 from datetime import date
 
 import altair as alt
@@ -16,6 +15,7 @@ import pandas as pd
 import streamlit as st
 
 import grr_core as g
+from report import build_report, safe_filename
 
 st.set_page_config(page_title="Gauge R&R Studio", page_icon="📏", layout="wide")
 
@@ -139,12 +139,7 @@ main = results[0]
 p, o, r = g.study_shape(clean)
 
 
-def _part_key(s: str):
-    """Sort '2' before '10' when part IDs are numeric; otherwise alphabetical."""
-    return (0, float(s), s) if s.replace(".", "", 1).isdigit() else (1, 0.0, s)
-
-
-PART_ORDER = sorted(clean["Part"].unique(), key=_part_key)
+PART_ORDER = sorted(clean["Part"].unique(), key=g.part_sort_key)
 
 # ---- Headline ---------------------------------------------------------------
 icon, kind = VERDICT_STYLE[main.verdict]
@@ -306,20 +301,9 @@ can't really tell parts apart.
 # Report download
 # ----------------------------------------------------------------------------
 st.divider()
-buf = io.BytesIO()
-with pd.ExcelWriter(buf, engine="openpyxl") as xw:
-    pd.DataFrame({
-        "Field": ["Characteristic", "Gauge", "Units", "Date", "Parts", "Operators",
-                  "Trials", "Tolerance", "k", "Verdict", "Basis", "ndc"],
-        "Value": [characteristic, gauge, units, date.today().isoformat(), p, o, r,
-                  tolerance if tolerance else "—", k, main.verdict,
-                  main.verdict_basis, main.ndc],
-    }).to_excel(xw, sheet_name="Summary", index=False)
-    for res in results:
-        res.to_frame().to_excel(xw, sheet_name=res.method[:31], index=False)
-    if main.anova_table is not None:
-        main.anova_table.to_excel(xw, sheet_name="ANOVA table", index=False)
-    g.long_to_wide(clean).to_excel(xw, sheet_name="Data", index=False)
-st.download_button("Download study report (Excel)", buf.getvalue(),
-                   f"GRR_{characteristic.replace(' ', '_')}_{date.today():%Y%m%d}.xlsx",
+report_bytes = build_report(
+    results, clean, characteristic=characteristic, gauge=gauge, units=units,
+    lsl=lsl if tolerance else None, usl=usl if tolerance else None)
+st.download_button("Download study report (Excel)", report_bytes,
+                   safe_filename(characteristic),
                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

@@ -20,7 +20,7 @@ If the gauge and inspectors contribute too much of the total variation, accept/r
 - **ANOVA table**: automatic pooling of a non-significant interaction (α selectable).
 - **Three input modes**: demo data, a grid laid out like the paper form, or a CSV/Excel upload.
 - **Diagnostics in plain language**: tells you whether the problem is the gauge or the people, and flags out-of-control ranges.
-- **Excel report** download.
+- **Formatted Excel report**: summary sheet with the verdict, AIAG guidance, findings, and prepared/reviewed signoff lines, plus variance components, the ANOVA table, and raw data.
 
 ## Verified against published results
 
@@ -36,7 +36,7 @@ The calculation engine (`grr_core.py`) is unit-tested against the 10-part, 3-app
 | %Study Var GRR (ANOVA) | 27.86% | 27.86% |
 
 ```bash
-python -m unittest discover tests -v     # 23 tests
+python -m unittest discover tests -v     # 30 tests
 ```
 
 ## Run locally
@@ -76,6 +76,7 @@ ndc should be **≥ 5**.
 ```
 app.py               Streamlit UI (input, charts, report)
 grr_core.py          Calculation engine, no UI code
+report.py            Formatted Excel report (summary, verdict, signoff lines)
 tests/               Unit tests against the AIAG reference example
 sample_data/         Synthetic demo study
 ```
