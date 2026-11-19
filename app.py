@@ -43,9 +43,11 @@ gauge = st.sidebar.text_input("Gauge", "0–2 in outside micrometer")
 units = st.sidebar.text_input("Units", "in")
 
 use_tol = st.sidebar.checkbox("Evaluate against tolerance", value=True)
-c1, c2 = st.sidebar.columns(2)
-lsl = c1.number_input("LSL", value=1.220, format="%.4f", disabled=not use_tol)
-usl = c2.number_input("USL", value=1.280, format="%.4f", disabled=not use_tol)
+# Stacked (not side-by-side) so 4-decimal values aren't truncated in the sidebar
+lsl = st.sidebar.number_input("LSL (lower spec limit)", value=1.220, format="%.4f",
+                              step=0.001, disabled=not use_tol)
+usl = st.sidebar.number_input("USL (upper spec limit)", value=1.280, format="%.4f",
+                              step=0.001, disabled=not use_tol)
 tolerance = (usl - lsl) if use_tol else None
 if use_tol and tolerance is not None and tolerance <= 0:
     st.sidebar.error("USL must be greater than LSL.")
