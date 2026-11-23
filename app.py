@@ -78,7 +78,7 @@ if source.startswith("Demo"):
     st.info("Demo: 10 flange samples × 3 inspectors × 3 trials with a micrometer. "
             "Synthetic data, not production records.")
     with st.expander("View demo data"):
-        st.dataframe(g.long_to_wide(data), hide_index=True, use_container_width=True)
+        st.dataframe(g.long_to_wide(data), hide_index=True, width="stretch")
 
 elif source.startswith("Enter"):
     a, b, c = st.columns(3)
@@ -96,7 +96,7 @@ elif source.startswith("Enter"):
     st.caption("Columns are Operator-Trial. Order matters: randomize the part "
                "order each trial so operators can't remember earlier readings.")
     wide = st.data_editor(g.blank_study(n_parts, n_ops, n_trials, names),
-                          key=key, hide_index=True, use_container_width=True,
+                          key=key, hide_index=True, width="stretch",
                           disabled=["Part"],
                           column_config={c: st.column_config.NumberColumn(c, format="%.4f")
                                          for c in g.blank_study(n_parts, n_ops, n_trials, names).columns
@@ -174,7 +174,7 @@ with tabs[0]:
         fmt.update({c: "{:.2f}" for c in ["% Contribution (var)", "% Study Var (%TV)",
                                           "% Tolerance"]})
         st.dataframe(res.to_frame().style.format(fmt, na_rep="—"),
-                     hide_index=True, use_container_width=True)
+                     hide_index=True, width="stretch")
         st.caption(f"ndc = {res.ndc} · verdict basis: {res.verdict_basis}")
 
 # ---- Charts -----------------------------------------------------------------
@@ -199,7 +199,7 @@ with tabs[1]:
             color=alt.Color("Measure:N", legend=alt.Legend(orient="bottom")),
             tooltip=["Source", "Measure", alt.Tooltip("Percent:Q", format=".2f")],
         ).properties(height=320),
-        use_container_width=True)
+        width="stretch")
 
     # Measurements by part (spread across operators)
     b.markdown("**Measurements by part**")
@@ -210,7 +210,7 @@ with tabs[1]:
             color="Operator:N",
             tooltip=["Part", "Operator", "Trial", "Measurement"],
         ).properties(height=320),
-        use_container_width=True)
+        width="stretch")
 
     def control_panels(df: pd.DataFrame, value: str, limits: list[float],
                        zero: bool) -> alt.HConcatChart:
@@ -255,7 +255,7 @@ with tabs[1]:
             y=alt.Y("Measurement:Q", scale=alt.Scale(zero=False), title=f"Average ({units})"),
             color="Operator:N",
         ).properties(height=280),
-        use_container_width=True)
+        width="stretch")
     st.caption("Parallel lines = operators agree (possibly with a constant offset). "
                "Crossing lines = operators disagree on specific parts.")
 
@@ -266,12 +266,12 @@ with tabs[2]:
         an = g.anova(clean, k=k, tolerance=tolerance, alpha_interaction=alpha)
     st.dataframe(an.anova_table.style.format(
         {"SS": "{:.6f}", "MS": "{:.6f}", "F": "{:.3f}", "P": "{:.4f}"}, na_rep=""),
-        hide_index=True, use_container_width=True)
+        hide_index=True, width="stretch")
     st.caption("Two-way crossed ANOVA, parts and operators as random effects.")
 
 # ---- Data -------------------------------------------------------------------
 with tabs[3]:
-    st.dataframe(g.long_to_wide(clean), hide_index=True, use_container_width=True)
+    st.dataframe(g.long_to_wide(clean), hide_index=True, width="stretch")
 
 # ---- Help -------------------------------------------------------------------
 with tabs[4]:
